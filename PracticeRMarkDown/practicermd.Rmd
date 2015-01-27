@@ -9,8 +9,10 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ```{r}
 summary(cars)
+sd(cars$dist)
 ```
 
+The Standard Deviation for distance is `r sd(cars$dist)`.
 You can also embed plots, for example:
 
 ```{r, echo=FALSE}
