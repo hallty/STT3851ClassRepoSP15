@@ -25,13 +25,13 @@ Next, a subset of people 25 or younger who smoked in the last 12 months is creat
 ```{r}
 library(PDS)
 library(dplyr)
-nesarc.sub <- NESARC %>% 
-  filter(!is.na(CHECK321) & !is.na(AGE) & CHECK321 ==1 & AGE <= 25)
-dim(nesarc.sub)
-nesarc.sub <- nesarc.sub %>% 
-  select(MAJORDEPLIFE, CHECK321, AGE, TAB12MDX, S3AQ3B1, S3AQ3C1, ETHRACE2A, SEX)
-dim(nesarc.sub)
-summary(nesarc.sub)
+addHealth.sub <- AddHealth %>% 
+  select(H1FV8, H1FV7, H1FV5, H1DS14, H1DS12, H1DS10, H1DS9, H1DS8, H1DS6, H1DS5, H1DS4, H1DS2, H1DS1, H1TO44, H1TO36, H1TO28, H1TO27, H1TO23, H1TO22, H1TO20, H1TO18, H1TO17, H1TO15)
+dim(addHealth.sub)
+#nesarc.sub <- nesarc.sub %>% 
+ # select(MAJORDEPLIFE, CHECK321, AGE, TAB12MDX, S3AQ3B1, S3AQ3C1, ETHRACE2A, SEX)
+#dim(nesarc.sub)
+summary(addHealth.sub)
 ```
 
 Running `summary` on the `nesarc.sub` reveals some non-obvious categories for the factors `CHECK321` and `S3AQ3B1`.  Reviewing the Code Book (HINT: Inside a pdf use `shift F` (Windows) or `command F` (Mac) then type the variable name inside the box to find the variable in the pdf), it is noted that a 9 is used to indicate missing values for `S3AQ3B1` and a 99 is used to indicate missing values for `S3AQ3C1`.
