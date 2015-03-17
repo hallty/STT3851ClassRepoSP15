@@ -1,7 +1,7 @@
 ---
-title: "Data Management Template"
+title: "Project Template"
 author: "Alan T. Arnholt"
-date: "March 1, 2015"
+date: "March 11, 2015"
 output: html_document
 ---
 
@@ -25,13 +25,13 @@ Next, a subset of people 25 or younger who smoked in the last 12 months is creat
 ```{r}
 library(PDS)
 library(dplyr)
-addHealth.sub <- AddHealth %>% 
-  select(H1FV8, H1FV7, H1FV5, H1DS14, H1DS12, H1DS10, H1DS9, H1DS8, H1DS6, H1DS5, H1DS4, H1DS2, H1DS1, H1TO44, H1TO36, H1TO28, H1TO27, H1TO23, H1TO22, H1TO20, H1TO18, H1TO17, H1TO15)
-dim(addHealth.sub)
-#nesarc.sub <- nesarc.sub %>% 
- # select(MAJORDEPLIFE, CHECK321, AGE, TAB12MDX, S3AQ3B1, S3AQ3C1, ETHRACE2A, SEX)
-#dim(nesarc.sub)
-summary(addHealth.sub)
+nesarc.sub <- NESARC %>% 
+  filter(!is.na(CHECK321) & !is.na(AGE) & CHECK321 ==1 & AGE <= 25)
+dim(nesarc.sub)
+nesarc.sub <- nesarc.sub %>% 
+  select(MAJORDEPLIFE, CHECK321, AGE, TAB12MDX, S3AQ3B1, S3AQ3C1, ETHRACE2A, SEX)
+dim(nesarc.sub)
+summary(nesarc.sub)
 ```
 
 Running `summary` on the `nesarc.sub` reveals some non-obvious categories for the factors `CHECK321` and `S3AQ3B1`.  Reviewing the Code Book (HINT: Inside a pdf use `shift F` (Windows) or `command F` (Mac) then type the variable name inside the box to find the variable in the pdf), it is noted that a 9 is used to indicate missing values for `S3AQ3B1` and a 99 is used to indicate missing values for `S3AQ3C1`.
@@ -88,15 +88,20 @@ nesarc.sub$MAJORDEPLIFE <- factor(nesarc.sub$MAJORDEPLIFE,
                               labels = c("No Depression", "Yes Depression"))
 nesarc.sub$S3AQ3B1 <- factor(nesarc.sub$S3AQ3B1, 
                          labels = c("Every Day", "5 to 6 Days/week", 
-                                    "3 to 4 Days/week",   "1 to 2 Days/week", "2 to 3 Days/month", 
+                                    "3 to 4 Days/week",   "1 to 2 Days/week", 
+                                    "2 to 3 Days/month", 
                                     "Once a month or less"))
 nesarc.sub$S3AQ3B1 <- factor(nesarc.sub$S3AQ3B1, 
-                         levels = c("Once a month or less", "2 to 3 Days/month", "1 to 2 Days/week",  "3 to 4 Days/week", "5 to 6 Days/week", "Every Day"))
+                         levels = c("Once a month or less", "2 to 3 Days/month", 
+                                    "1 to 2 Days/week",  "3 to 4 Days/week", 
+                                    "5 to 6 Days/week", "Every Day"))
 nesarc.sub$TAB12MDX <- factor(nesarc.sub$TAB12MDX, 
                          labels = c("No Nicotine Dependence", "Nicotine Dependence"))
 nesarc.sub$TAB12MDX <- factor(nesarc.sub$TAB12MDX, 
                          levels = c("Nicotine Dependence", "No Nicotine Dependence"))
-nesarc.sub$ETHRACE2A <- factor(nesarc.sub$ETHRACE2A, labels = c("Caucasian", "African American", "Native American", "Asian", "Hispanic"))
+nesarc.sub$ETHRACE2A <- factor(nesarc.sub$ETHRACE2A, 
+                               labels = c("Caucasian", "African American", 
+                                          "Native American", "Asian", "Hispanic"))
 nesarc.sub$SEX <- factor(nesarc.sub$SEX, labels = c("Male", "Female"))
 table(nesarc.sub$SEX)
 nesarc.sub$SEX <- factor(nesarc.sub$SEX, levels = c("Female", "Male"))
@@ -107,7 +112,9 @@ summary(nesarc.sub)
 
 ```{r}
 nesarc.sub <- nesarc.sub %>% 
-  rename(Depression = MAJORDEPLIFE, TobaccoDependence = TAB12MDX, SmokingFreq = S3AQ3B1, DailyCigsSmoked = S3AQ3C1, Ethnicity = ETHRACE2A, Sex = SEX, Age = AGE)
+  rename(Depression = MAJORDEPLIFE, TobaccoDependence = TAB12MDX, 
+         SmokingFreq = S3AQ3B1, DailyCigsSmoked = S3AQ3C1, Ethnicity = ETHRACE2A, 
+         Sex = SEX, Age = AGE)
 head(nesarc.sub)
 ```
 
@@ -215,8 +222,8 @@ g1
 Tweaking the last graph.  
 
 ```{r}
-g1 +
-  labs(x = "", y = "", title = "Fraction of young adult smokers with and without\n nicotine dependence by depression status") + 
+g1 + labs(x = "", y = "", 
+          title = "Fraction of young adult smokers with and without\n nicotine dependence by depression status") + 
   scale_fill_discrete(name="Tobacco Addiction\nStatus") 
 ```
 
@@ -252,7 +259,68 @@ mosaic(~TobaccoDependence + Depression + Sex, data = nesarc.sub, shade = TRUE)
 mosaic(~TobaccoDependence + Depression + Sex + CigsSmokedFac, data = nesarc.sub, shade = TRUE)  
 ```
 
-### Some Statistics (We have not discussed this yet)
+### Some Statistics
+
+Note `nesarc.sub` is not the same data set discussed in the book.  In the book, the subset is smaller since it includes only people who have smoked every day (`S3AQ41`).  This subset has $(n = `r dim(nesarc.sub)[1]`)$ compared to the one in the book which has $n = 1320$. 
+
+```{r}
+ggplot(data = nesarc.sub, aes(x = DailyCigsSmoked)) + 
+   geom_density(fill = "gray") + 
+   facet_grid(Depression~.) +
+   theme_bw()
+tapply(nesarc.sub$DailyCigsSmoked, list(nesarc.sub$Depression), sd, na.rm = TRUE) 
+ ggplot(data = nesarc.sub, aes(x = Depression, y = DailyCigsSmoked, fill = Depression)) + geom_violin() + 
+   theme_bw()
+```
+
+```{r}
+t.test(DailyCigsSmoked ~ Depression, data = nesarc.sub)
+t.test(TotalCigsSmoked ~ Depression, data = nesarc.sub)
+t.test(TotalCigsSmoked ~ Depression, data = nesarc.sub, var.equal = TRUE) # assumptions not really met here
+summary(aov(TotalCigsSmoked ~ Depression, data = nesarc.sub))
+# OR
+mod <- lm(TotalCigsSmoked ~ Depression, data = nesarc.sub)
+anova(mod)
+``` 
+
+### Taking a permuation approach
+
+You should add your own notes here when I explain this in class.
+
+```{r}
+set.seed(123)
+SIMS <- 10000 - 1
+stat <- numeric(SIMS)
+TS <- t.test(DailyCigsSmoked ~ Depression, data = nesarc.sub)$stat
+for(i in 1:SIMS){
+  stat[i] <- t.test(DailyCigsSmoked ~ sample(Depression), data = nesarc.sub)$stat
+}
+ggplot(data = data.frame(stat = stat), aes(x = stat)) + 
+  geom_density(fill = "pink") + 
+  theme_bw() + 
+  stat_function(fun = dt, arg = list(df = 733), color = "red", linetype = "dashed") + geom_vline(x = c(TS, -TS), linetype = "dashed", color = "blue")
+TS
+pv <- (sum(stat >= abs(TS))*2 + 1) / SIMS
+pv
+# ANOVA
+set.seed(123)
+SIMS <- 10000 - 1
+stat <- numeric(SIMS)
+TSF <- anova(lm(DailyCigsSmoked ~ Depression, data = nesarc.sub))[1, 4]
+for(i in 1:SIMS){
+  stat[i] <- anova(lm(DailyCigsSmoked ~ sample(Depression), data = nesarc.sub))[1, 4]
+}
+ggplot(data = data.frame(stat = stat), aes(x = stat)) + 
+  geom_density(fill = "pink") + 
+  theme_bw() + 
+  stat_function(fun = df, arg = list(df1 = 1, df2 = 1695), color = "red", linetype = "dashed") + geom_vline(x = TSF, linetype = "dashed", color = "blue") + ylim(0, 1)
+TSF
+pvF <- (sum(stat >= TSF) + 1) / SIMS
+pvF
+```
+
+
+
 
 ```{r results='asis', echo = TRUE}
 library(moonBook)
